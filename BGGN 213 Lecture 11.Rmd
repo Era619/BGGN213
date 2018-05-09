@@ -22,3 +22,101 @@ names(percent) <- row.names(p)
 percent
 ```
 
+## Using Bio3D
+Load the bio3d package
+```{r}
+install.packages("bio3d")
+```
+
+```{r}
+library(bio3d)
+```
+
+```{r}
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+pdb
+```
+
+```{r}
+attributes(pdb)
+```
+
+```{r}
+head(pdb$atom)
+```
+
+```{r}
+pdb$atom[1:2, c("eleno", "elety", "x", "y", "z")]
+```
+
+```{r}
+pdb$atom$elety[1:2]
+```
+
+```{r}
+plot.bio3d(pdb$atom$b[pdb$calpha], sse=pdb, typ="1", ylab="B-factor")
+```
+
+```{r}
+pdb$xyz
+```
+
+```{r}
+dim(pdb$xyz)
+```
+
+```{r}
+pdb$xyz[ 1, atom2xyz(1:2)]
+```
+
+```{r}
+ca.inds <- atom.select(pdb, "calpha")
+ca.inds
+```
+
+```{r}
+inds.ligand <- atom.select(pdb, "ligand")
+inds.protein <- atom.select(pdb, "protein")
+inds.protein
+```
+
+```{r}
+pdb$atom[inds$atom,]
+```
+
+```{r}
+pdb$atom[inds.ligand$atom,]
+```
+
+```{r}
+pdb$atom[inds.protein$atom,]
+```
+
+```{r}
+head(pdb$atom[inds.ligand$atom,])
+```
+
+```{r}
+head(pdb$atom[inds.protein$atom,])
+```
+
+```{r}
+pdb.ligand <- trim.pdb(pdb, inds = inds.ligand)
+pdb.ligand
+```
+
+```{r}
+write.pdb(pdb.ligand, file="1hsg_ligand.pdb")
+```
+
+```{r}
+pdb.protein <- trim.pdb(pdb, inds=inds.protein)
+```
+
+```{r}
+write.pdb(pdb.protein, file = "1hsg_protein.pdb")
+```
+

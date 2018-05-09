@@ -1,0 +1,24 @@
+---
+title: "BGGN 213 Lecture 11"
+author: "Eduardo Ramirez
+date: "05/09/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PDB statistics
+Import our PDB statistics CSV file and calculate percent strutures by experimental method.
+
+```{r}
+p <- read.csv("data Export Summary.csv", row.names=1)
+```
+
+```{r}
+percent <- (p$Total / sum(p$Total)) * 100
+names(percent) <- row.names(p)
+percent
+```
+

@@ -120,3 +120,86 @@ pdb.protein <- trim.pdb(pdb, inds=inds.protein)
 write.pdb(pdb.protein, file = "1hsg_protein.pdb")
 ```
 
+## Aligning multiple structures
+```{r}
+ids <- c("1TND_B","1AGR_A","1TAG_A","1GG2_A","1KJY_A","4G5Q_A")  
+files <- get.pdb(ids, split = TRUE)
+```
+
+```{r}
+pdbs <- pdbaln(files, fit = TRUE)
+pdbs
+```
+
+```{r}
+pdbs$ali[1:5, 1:8]
+```
+
+```{r}
+pdbs$resno[1:5, 1:8]
+```
+
+## Search and retrieve Adenylate kinase structures
+```{r}
+aa <- get.seq("1ake_A")
+aa
+```
+
+```{r}
+b <- blast.pdb(aa)
+
+```
+
+```{r}
+hits <- plot(b)
+```
+
+```{r}
+hits
+```
+
+```{r}
+# Fetch PDBs
+files <- get.pdb(hits$pdb.id, path = "pdbs", split = TRUE, gzip = TRUE)
+```
+
+```{r}
+# Align structures
+pdbs <- pdbaln(files)
+
+# Vector containing PDB codes
+ids <- basename.pdb(pdbs$id)
+# Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+
+## Principal Component Analysis
+```{r}
+# find invariant core
+core <- core.find(pdbs) 
+
+```
+
+```{r}
+# superimpose all structures to core
+pdbs$xyz = pdbfit(pdbs, core) 
+
+```
+
+```{r}
+# Perform PCA
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+
+```{r}
+ #Visualize first principal component
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+pc1
+```
+
+# View within R with bio3d
+```{r}
+
+```
+

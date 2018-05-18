@@ -1,0 +1,236 @@
+---
+title: "Lecture14"
+author: "Eduardo Ramirez"
+date: "5/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Transcriptomics and the analysis of RNA-Seq data
+```{r}
+counts <- read.csv("Data/airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("Data/airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+colnames(counts)[-1] == metadata$id
+```
+Calculate the mean counts for each gene across experiments
+```{r}
+metadata[,"dex"]=="control"
+control <- metadata[metadata[,"dex"]=="control",]
+control.mean <- rowSums( counts[ ,control$id] )/nrow(control)
+names(control.mean) <- counts$ensgene
+```
+
+```{r}
+head(control.mean)
+```
+Calculate the mean counts for each gene across all drug treated experiments
+```{r}
+treated <- metadata[metadata[,"dex"]=="control",]
+treated.mean <- rowSums( counts[ ,treated$id] )/nrow(treated)
+names(treated.mean) <- counts$ensgene
+```
+Combine control and treated into new data.frame called meancounts
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+head(meancounts)
+```
+
+```{r}
+colSums(meancounts)
+```
+Plor our mean counts data for control vs treated
+```{r}
+plot(meancounts$control, meancounts$treated)
+```
+Plot with log to see more data
+```{r}
+plot(meancounts$control, meancounts$treated, log="xy")
+```
+
+```{r}
+meancounts$log2fc <-log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+Understanding of which function
+```{r}
+x<- matrix(1:10, ncol=2, byrow=TRUE)
+x[5,2] <- 0
+which(x==0, arr.ind=TRUE)
+```
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+head(zero.vals)
+meancounts[65,]
+```
+Removing zero count gene
+```{r}
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+```
+
+```{r}
+head(up.ind)
+head(down.ind)
+sum(up.ind)
+sum(down.ind)
+```
+
+```{r}
+paste("Up:", sum(up.ind))
+paste("Down:", sum(down.ind))
+```
+#add annotation from a supplied CSV file, such as those available from ENSEMBLE or UCSC
+```{r}
+anno <- read.csv("annotables_grch38.csv")
+head(anno)
+```
+
+```{r}
+results <- merge(mycounts, anno, by.x="row.names", by.y="ensgene")
+head(results)
+```
+
+###DESeq2 analysis
+```{r}
+library(DESeq2)
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+sizeFactors(dds)
+```
+
+```{r}
+dispersions(dds)
+```
+
+```{r}
+results(dds)
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+res
+```
+
+```{r}
+summary(res)
+```
+
+```{r}
+res0rdered <- res[order(res$pvalue),]
+```
+
+```{r}
+res05 <- results(dds, alpha=0.05)
+summary(res05)
+```
+
+```{r}
+resSig05 <- subset(as.data.frame(res), padj < 0.05)
+nrow(resSig05)
+```
+
+```{r}
+resSig01 <- subset(as.data.frame(res), padj < 0.01)
+nrow(resSig01)
+```
+
+```{r}
+ord <- order( resSig01$padj )
+#View(res01[ord,])
+head(resSig01[ord,])
+```
+
+```{r}
+write.csv(resSig01[ord,], "signif01_results.csv")
+```
+##Data Visualization
+```{r}
+i <- grep("CRISPLD2", resSig01$symbol)
+resSig01[i,]
+```
+
+```{r}
+rownames(resSig01[i,])
+```
+
+```{r}
+plotCounts(dds, gene="ENSG00000103196", intgroup="dex")
+```
+
+```{r}
+# Return the data
+d <- plotCounts(dds, gene="ENSG00000103196", intgroup="dex", returnData=TRUE)
+head(d)
+```
+
+```{r}
+boxplot(count ~ dex , data=d)
+```
+
+```{r}
+library(ggplot2)
+ggplot(d, aes(dex, count)) + geom_boxplot(aes(fill=dex)) + scale_y_log10() + ggtitle("CRISPLD2")
+```
+
+```{r}
+res$sig <- res$padj<0.05
+
+# How many of each?
+table(res$sig)
+sum(is.na(res$sig))
+```
+
+```{r}
+plotMA(res, ylim=c(-2,2))
+```
+
+```{r}
+resLFC <- lfcShrink(dds, coef=2)
+resLFC
+plotMA(resLFC, ylim=c(-2,2))
+```
+
+```{r}
+ggplot(as.data.frame(res), aes(log2FoldChange, -1*log10(pvalue), col=sig)) + 
+    geom_point() + 
+    ggtitle("Volcano plot")
+```
+
+```{r}
+vsdata <- vst(dds, blind=FALSE)
+plotPCA(vsdata, intgroup="dex")
+```
+
+```{r}
+sessionInfo()
+```
+

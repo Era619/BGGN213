@@ -1,0 +1,258 @@
+---
+title: "Lecture 15"
+author: "Eduardo Ramirez"
+date: "5/23/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(DESeq2)
+```
+
+```{r}
+metaFile <- "GSE37704_metadata.csv"
+countFile <- "GSE37704_featurecounts.csv"
+```
+
+```{r}
+# Import metadata and take a peak
+colData = read.csv(metaFile, row.names=1)
+head(colData)
+```
+
+```{r}
+# Import countdata
+countData = read.csv(countFile, row.names=1)
+head(countData)
+```
+
+```{r}
+# Note we need to remove the odd first $length col
+countData <- as.matrix(countData[,-1])
+head(countData)
+```
+
+```{r}
+# Filter count data where you have 0 read count across all samples.
+countData = countData[rowSums(countData)>1, ]
+head(countData)
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=countData,
+                             colData=colData,
+                             design=~condition)
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+res
+```
+
+```{r}
+mcols(res, use.names = TRUE)
+```
+
+```{r}
+summary(res)
+```
+
+###Q. In the summary of our results printed above (and by default) the FDR level is set to 10% (i.e. adjusted p-value < 0.1) and the log2 fold change threshold is set to 0. Use the alpha and lfcThreshold input arguments to the results() function to change these to an FDR of 5% and a log2 fold change threshold of 2. Then use the summary() function to find out how many genes are up and down at these thresholds.
+
+```{r}
+reSig <- results(dds, lfcThreshold = 2, alpha=0.05)
+summary(reSig)
+```
+
+```{r}
+table(res$padj < 0.05)
+```
+
+```{r}
+table(res$log2FoldChange > 2)
+```
+
+```{r}
+table( res$padj < 0.05, res$log2FoldChange > 2)
+```
+
+```{r}
+table(res$pvalue < 0.05)
+```
+
+```{r}
+table(res$padj < 0.05)
+```
+
+```{r}
+# Make a new results object 'resSig' with only significant genes
+resSig <- subset(res, padj < 0.05)
+
+# Print the first 10 strongest DOWN genes
+ord.down <- order(resSig$log2FoldChange)
+head(resSig[ ord.down, ], 10)
+```
+
+###Q. Do the same as above but print out the top 10 strongest up-regulated genes. HINT: see the help for the order() function to see how to return the decreasing ordered indices you will want for accesing your resSig result.
+
+```{r}
+# Print the first 10 strongest UP genes
+ord.up <- order(resSig$log2FoldChange, decreasing = TRUE)
+head(resSig[ ord.up, ], 10)
+```
+
+##Annotating our genes and mapping to Entrez IDs
+
+```{r}
+##Install Packages using bioclite
+#source("http://bioconductor.org/biocLite.R")
+#biocLite()
+
+# For this class, you'll also need DESeq2:
+#biocLite("DESeq2")
+```
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+```
+
+```{r}
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    column="SYMBOL",
+                    keytype="ENSEMBL",
+                    multiVals="first")
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    column="ENTREZID",
+                    keytype="ENSEMBL",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    column="GENENAME",
+                    keytype="ENSEMBL",
+                    multiVals="first")
+
+head(res, 10)
+```
+
+###Section 2. Pathway Analysis
+##KEGG pathways
+
+```{r}
+library(pathview)
+```
+
+```{r}
+library(gage)
+library(gageData)
+
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+head(kegg.sets.hs, 3)
+```
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+```
+
+```{r}
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs, same.dir=TRUE)
+```
+
+```{r}
+attributes(keggres)
+```
+
+```{r}
+head(keggres$greater)
+```
+
+```{r}
+head(keggres$less)
+```
+
+```{r}
+lapply(keggres, head)
+```
+
+```{r}
+## Sanity check displaying all pathways data
+pathways = data.frame(id=rownames(keggres$greater), keggres$greater)
+head(pathways)
+```
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+
+```{r}
+# A different PDF based output of the same data
+pathview(gene.data=foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+![](hsa04110.pathview.png)
+
+```{r}
+## Focus on top 5 upregulated pathways here for demo purposes only
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+# Extract the IDs part of each string
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+###Section 3. Gene Ontology (GO)
+
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+
+###Section 4. Reactome Pathway Analysis
+
+```{r}
+sig_genes <- res[res$padj <= 0.05 & !is.na(res$padj), "symbol"]
+print(paste("Total number of significant genes:", length(sig_genes)))
+```
+
+```{r}
+write.table(sig_genes, file="significant_genes.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+```
+
+###Question: What pathway has the most significant “Entities p-value”? Do the most significant pathways listed match your previous KEGG results? What factors could cause differences between the two methods?
+
+###Section 5. GO Analysis
+
+#http://www.geneontology.org/page/go-enrichment-analysis
+
+#Question: What pathway has the most significant “Entities p-value”? Do the most significant pathways listed match your previous KEGG results? What factors could cause differences between the two methods?
+
+###Bounus: Gene clustering, heatmaps and PCA
+

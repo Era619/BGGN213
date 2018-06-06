@@ -24,7 +24,7 @@ Class13: [Genome informatics and high throughput sequencing](https://github.com/
 
 Class14: [Transcriptomics and the analysis of RNA-Seq data](https://github.com/Era619/BGGN213/blob/master/Lecture%2014.Rmd)
 
-Class15: [Genome annotation and the interpretation of gene lists]
+Class15: [Genome annotation and the interpretation of gene lists](https://github.com/Era619/BGGN213/blob/Era619-05/23/2018/Lecture%2015.Rmd)
 
 Class16: [Essential UNIX for bioinformatics]
 

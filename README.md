@@ -18,7 +18,7 @@ Class10: [Git, GitHub and class project]
 
 Class11: [Structural Bioinformatics]
 
-Class12: [Bioinformatics in drug discovery and design]
+Class12: [Bioinformatics in drug discovery and design](https://github.com/Era619/BGGN213/blob/Era619-05/30/2018/Lecture%2012%20.Rmd)
 
 Class13: [Genome informatics and high throughput sequencing]
 

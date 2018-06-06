@@ -22,7 +22,7 @@ Class12: [Bioinformatics in drug discovery and design](https://github.com/Era619
 
 Class13: [Genome informatics and high throughput sequencing](https://github.com/Era619/BGGN213/blob/master/Lecture%2013.Rmd)
 
-Class14: [Transcriptomics and the analysis of RNA-Seq data]
+Class14: [Transcriptomics and the analysis of RNA-Seq data](https://github.com/Era619/BGGN213/blob/master/Lecture%2014.Rmd)
 
 Class15: [Genome annotation and the interpretation of gene lists]
 

@@ -1,1 +1,4 @@
-theme: jekyll-theme-slate
+Theme: jekyll-theme-slate
+Title: BGGN 213 Foundations of Bioinformatics Spring 2018
+Description: My R-studio projects
+logo: https://bioboot.github.io/bimm143_S18/assets/img/logo.png

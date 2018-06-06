@@ -20,7 +20,7 @@ Class11: [Structural Bioinformatics]
 
 Class12: [Bioinformatics in drug discovery and design](https://github.com/Era619/BGGN213/blob/Era619-05/30/2018/Lecture%2012%20.Rmd)
 
-Class13: [Genome informatics and high throughput sequencing]
+Class13: [Genome informatics and high throughput sequencing](https://github.com/Era619/BGGN213/blob/master/Lecture%2013.Rmd)
 
 Class14: [Transcriptomics and the analysis of RNA-Seq data]
 

@@ -30,5 +30,5 @@ Class16: [Essential UNIX for bioinformatics]
 
 Class17: [Biological network analysis](https://github.com/Era619/BGGN213/blob/Era619-05/30/2018/Lecture%2017.Rmd)
 
-Class18: [Cancer genomics]
+Class18: [Cancer genomics](https://github.com/Era619/BGGN213/blob/Era619-05/30/2018/Lecture%2018.Rmd)
 

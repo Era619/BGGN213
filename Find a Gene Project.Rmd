@@ -1,0 +1,100 @@
+---
+title: "Find a Gene Project"
+author: "Eduardo Ramirez"
+date: "6/7/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("bio3d")
+```
+
+```{r}
+library(bio3d)
+```
+
+```{r}
+## try http:// if https:// URLs are not supported
+source("https://bioconductor.org/biocLite.R")
+biocLite("Biostrings")
+```
+
+```{r}
+#read fasta file into R as a dataframe: 1st column as "RefSeqID", 2nd column as "seq"
+
+library("Biostrings")
+fasta2dataframe=function(fastaFile){
+s = readDNAStringSet(fastaFile)
+RefSeqID = names(s)
+RefSeqID = sub(" .*", "", RefSeqID) 
+#erase all characters after the first space: regular expression matches a space followed by any sequence of characters and sub replaces that with a string having zero  characters 
+
+for (i in 1:length(s)){
+seq[i]=toString(s[i])
+}
+
+RefSeqID_seq=data.frame(RefSeqID,seq)
+return(RefSeqID_seq)
+}
+```
+
+```{r}
+install.packages("fst")
+```
+
+```{r}
+seqs <- read.fasta('muscle.fst')
+seqs
+```
+
+```{r}
+View('muscle.fst')
+```
+
+```{r}
+seqs <- seqaln(seqs)
+seqs
+```
+
+```{r}
+## Calculate positional identity scores
+ide <- conserv(seqs$ali, method="identity")
+mutant.sites <- which(ide < 1) 
+
+## Exclude gap possitions from analysis
+gaps <- gap.inspect(seqs)
+mutant.sites <- mutant.sites[mutant.sites %in% gaps$f.inds]
+
+mutant.sites
+```
+
+```{r}
+ide.mat <- seqidentity(seqs)
+```
+
+```{r}
+plot.dmat(ide.mat, color.palette=mono.colors,
+          main="Sequence Identity", xlab="Structure No.",
+          ylab="Structure No.")
+```
+
+```{r}
+hist(ide.mat[upper.tri(ide.mat)], breaks=30,xlim=c(0,1),
+     main="Sequence Identity", xlab="Identity")
+
+```
+
+```{r}
+heatmap(ide.mat, cexRow = 1.0, cexCol = 0.8)
+```
+
+```{r}
+jpeg(file="heatmap")
+heatmap(ide.mat, cexRow = 1.0, cexCol = 0.8)
+dev.off()
+```
+
